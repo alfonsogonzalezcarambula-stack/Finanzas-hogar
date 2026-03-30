@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="FinanzasHogar"/>
+<meta name="theme-color" content="#f5f0e8"/>
+<title>FinanzasHogar</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+:root{
+  --bg:#f5f0e8;--surface:#fffdf9;--surface2:#f0ebe0;--surface3:#e8e0d0;
+  --border:rgba(0,0,0,0.08);--border2:rgba(0,0,0,0.14);
+  --text:#1c1a16;--muted:#9c9485;--muted2:#7a7268;
+  --accent:#2d6a4f;--accent2:#1b4332;
+  --green:#2d6a4f;--red:#c1121f;--amber:#e07b00;--blue:#1d5f8a;
+  --green-dim:rgba(45,106,79,0.1);--red-dim:rgba(193,18,31,0.08);
+  --amber-dim:rgba(224,123,0,0.1);
+  --radius:14px;--font:'Sora',sans-serif;--mono:'JetBrains Mono',monospace;
+  --shadow:0 1px 4px rgba(0,0,0,0.06);
+  --safe-top:env(safe-area-inset-top);
+  --safe-bottom:env(safe-area-inset-bottom);
+}
+html{height:100%;overflow:hidden}
+body{height:100%;background:var(--bg);color:var(--text);font-family:var(--font);font-size:14px;overflow:hidden;position:fixed;width:100%;top:0;left:0}
+.shell{display:flex;flex-direction:column;height:100%;max-width:460px;margin:0 auto}
+.topbar{display:flex;align-items:center;justify-content:space-between;padding:calc(var(--safe-top) + 12px) 18px 12px;background:var(--surface);border-bottom:1px solid var(--border);flex-shrink:0}
+.topbar-title{font-size:17px;font-weight:700;letter-spacing:-.3px}
+.topbar-sub{font-size:11px;color:var(--muted);margin-top:2px}
+.month-nav{display:flex;align-items:center;gap:8px}
+.month-nav button{background:var(--surface2);border:1px solid var(--border2);color:var(--text);width:32px;height:32px;border-radius:8px;cursor:pointer;font-size:16px;font-weight:600}
+#monthLabel{font-size:12px;font-weight:600;min-width:80px;text-align:center}
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:calc(70px + var(--safe-bottom))}
+.content::-webkit-scrollbar{display:none}
+.bnav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:460px;background:var(--surface);border-top:1px solid var(--border);display:flex;z-index:200;padding:8px 0 calc(8px + var(--safe-bottom));box-shadow:0 -2px 12px rgba(0,0,0,0.06)}
+.bnav-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;cursor:pointer;background:none;border:none;color:var(--muted);font-family:var(--font);font-size:10px;font-weight:600;padding:6px 0;transition:color .15s;letter-spacing:.3px}
+.bnav-btn.active{color:var(--accent)}
+.bnav-btn svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.section{padding:8px 18px}
+.section-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1.2px;color:var(--muted);margin-bottom:10px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow)}
+.card+.card{margin-top:10px}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px;box-shadow:var(--shadow)}
+.kpi-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--muted)}
+.kpi-value{font-family:var(--mono);font-size:18px;font-weight:500;margin-top:6px;letter-spacing:-1px}
+.kpi-sub{font-size:10px;margin-top:4px;color:var(--muted)}
+.kpi-bar{height:3px;border-radius:2px;background:var(--surface3);margin-top:8px;overflow:hidden}
+.kpi-fill{height:100%;border-radius:2px;transition:width .6s ease}
+.hero{background:var(--accent2);border-radius:var(--radius);padding:22px;margin:14px 18px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(27,67,50,0.2)}
+.hero-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.5)}
+.hero-amount{font-family:var(--mono);font-size:30px;font-weight:500;color:#fff;letter-spacing:-2px;margin:6px 0 2px}
+.hero-sub{font-size:12px;color:rgba(255,255,255,0.4)}
+.hero-row{display:flex;gap:10px;margin-top:16px}
+.hero-stat{flex:1;background:rgba(255,255,255,0.08);border-radius:10px;padding:10px}
+.hero-stat-label{font-size:10px;color:rgba(255,255,255,0.45);font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.hero-stat-val{font-family:var(--mono);font-size:13px;color:rgba(255,255,255,0.9);margin-top:4px;font-weight:500}
+.credito-banner{background:linear-gradient(135deg,#7a1c1c,#5c1010);border-radius:var(--radius);padding:16px 18px;margin:0 18px 14px;display:flex;justify-content:space-between;align-items:center;box-shadow:0 4px 12px rgba(193,18,31,0.15)}
+.credito-banner-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.5)}
+.credito-banner-amount{font-family:var(--mono);font-size:22px;font-weight:500;color:#fff;letter-spacing:-1px;margin-top:4px}
+.credito-banner-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-top:2px}
+.credito-banner-icon{font-size:28px;opacity:.6}
+.tx-item{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.tx-item:last-child{border-bottom:none}
+.tx-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;background:var(--surface2)}
+.tx-info{flex:1;min-width:0}
+.tx-name{font-size:13px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tx-meta{font-size:11px;color:var(--muted);margin-top:3px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tx-amount{font-family:var(--mono);font-size:13px;font-weight:500;text-align:right;white-space:nowrap}
+.pago-tag{font-size:9px;font-weight:700;padding:2px 7px;border-radius:8px;text-transform:uppercase;letter-spacing:.5px}
+.pago-contado{background:var(--green-dim);color:var(--green)}
+.pago-credito{background:var(--red-dim);color:var(--red)}
+.chart-wrap{position:relative;height:200px}
+.loading{display:flex;flex-direction:column;align-items:center;justify-content:center;height:300px;color:var(--muted);font-size:13px;gap:12px}
+.spinner{width:32px;height:32px;border:3px solid var(--surface3);border-top-color:var(--accent);border-radius:50%;animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty{text-align:center;padding:32px 20px;color:var(--muted)}
+.empty-icon{font-size:32px;margin-bottom:8px}
+.alert-item{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.alert-item:last-child{border-bottom:none}
+.alert-icon{font-size:20px;flex-shrink:0;margin-top:1px}
+.alert-title{font-size:13px;font-weight:600;line-height:1.4}
+.alert-desc{font-size:11px;color:var(--muted);margin-top:3px;line-height:1.5}
+.patrimonio-card{background:var(--accent);border-radius:var(--radius);padding:22px;margin:14px 18px;box-shadow:0 4px 16px rgba(45,106,79,0.2)}
+.patrimonio-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:rgba(255,255,255,0.5)}
+.patrimonio-total{font-family:var(--mono);font-size:28px;font-weight:500;color:#fff;letter-spacing:-1px;margin:6px 0 4px}
+.patrimonio-sub{font-size:11px;color:rgba(255,255,255,0.4);margin-bottom:14px}
+.patrimonio-row{display:flex;gap:10px}
+.patrimonio-item{flex:1;background:rgba(255,255,255,0.1);border-radius:10px;padding:12px}
+.patrimonio-item-label{font-size:10px;color:rgba(255,255,255,0.5);font-weight:600}
+.patrimonio-item-val{font-family:var(--mono);font-size:15px;font-weight:500;color:#fff;margin-top:4px}
+.inv-item{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.inv-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+.inv-name{font-size:13px;font-weight:700}
+.inv-type{font-size:10px;color:var(--muted);margin-top:2px}
+.inv-return{font-family:var(--mono);font-size:14px;font-weight:600;color:var(--green);text-align:right}
+.inv-return-label{font-size:10px;color:var(--muted);text-align:right}
+.inv-desc{font-size:12px;color:var(--muted2);line-height:1.6}
+.risk-bar{display:flex;gap:3px;margin-top:10px}
+.risk-seg{height:4px;flex:1;border-radius:2px}
+.ai-msg{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:12px;padding:14px;margin-bottom:10px;box-shadow:var(--shadow)}
+.ai-msg-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.ai-dot{width:7px;height:7px;border-radius:4px;background:var(--accent);flex-shrink:0}
+.ai-msg-label{font-size:11px;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.5px}
+.ai-msg-text{font-size:13px;line-height:1.7;color:var(--muted2)}
+.ai-msg-text strong{color:var(--text);font-weight:600}
+.refresh-btn{background:var(--surface2);border:1px solid var(--border2);color:var(--muted2);padding:8px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;font-family:var(--font)}
+.filter-tabs{display:flex;gap:6px;margin-bottom:12px}
+.ftab{padding:7px 16px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--border2);background:none;color:var(--muted2);transition:all .15s;font-family:var(--font)}
+.ftab.active{background:var(--accent);border-color:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="shell">
+  <div class="topbar">
+    <div>
+      <div class="topbar-title">FinanzasHogar 🇺🇾</div>
+      <div class="topbar-sub" id="topSub">Cargando...</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div class="month-nav">
+        <button onclick="changeMonth(-1)">‹</button>
+        <span id="monthLabel"></span>
+        <button onclick="changeMonth(1)">›</button>
+      </div>
+      <button class="refresh-btn" onclick="loadAll()">↻</button>
+    </div>
+  </div>
+
+  <div class="content" id="mainContent">
+    <div class="loading"><div class="spinner"></div><span>Cargando datos...</span></div>
+  </div>
+
+  <div class="bnav">
+    <button class="bnav-btn active" onclick="showTab('dash')" id="btn-dash">
+      <svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/></svg>
+      Resumen
+    </button>
+    <button class="bnav-btn" onclick="showTab('movs')" id="btn-movs">
+      <svg viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Movimientos
+    </button>
+    <button class="bnav-btn" onclick="showTab('patrimonio')" id="btn-patrimonio">
+      <svg viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+      Patrimonio
+    </button>
+    <button class="bnav-btn" onclick="showTab('invest')" id="btn-invest">
+      <svg viewBox="0 0 24 24"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>
+      Invertir
+    </button>
+  </div>
+</div>
+
+<script>
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const USD_TO_UYU = 42;
+const API_URL = 'https://script.google.com/macros/s/AKfycbyRZX5YD0Y4KEPtKdP9nulC0NdCOAh_wXemqq_00RuqR6MGT_BZmb_oFnHRxF_PDijb/exec';
+
+let state = {
+  month: new Date().getMonth(),
+  year: new Date().getFullYear(),
+  transactions: [],
+  patrimonio: {pesos:0, dolares:0},
+  activeTab: 'dash',
+  movFilter: 'todos',
+};
+let catChart = null;
+
+function fmt(n, cur='UYU') {
+  const num = Number(n)||0;
+  if(cur==='USD') return 'U$S '+num.toLocaleString('es-UY',{minimumFractionDigits:0,maximumFractionDigits:0});
+  return '$ '+num.toLocaleString('es-UY',{minimumFractionDigits:0,maximumFractionDigits:0});
+}
+function toUYU(a,c){return c==='USD'?a*USD_TO_UYU:a;}
+
+function changeMonth(d){
+  state.month+=d;
+  if(state.month>11){state.month=0;state.year++;}
+  if(state.month<0){state.month=11;state.year--;}
+  render();
+}
+
+async function loadAll(){
+  document.getElementById('mainContent').innerHTML='<div class="loading"><div class="spinner"></div><span>Actualizando...</span></div>';
+  try{
+    const resp = await fetch(API_URL+'?action=getTodo');
+    const data = await resp.json();
+    state.transactions = data.txs;
+    state.patrimonio = data.patrimonio;
+    render();
+  } catch(e){
+    document.getElementById('mainContent').innerHTML='<div class="loading">Error al cargar datos.<br>Verificá tu conexión.</div>';
+  }
+}
+
+function currentTxs(){return state.transactions.filter(t=>t.mes===state.month&&t.anio===state.year);}
+
+function calcTotals(){
+  const txs=currentTxs();
+  const ingresos=txs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+toUYU(t.monto,t.moneda),0);
+  const contado=txs.filter(t=>t.tipo==='gasto'&&t.pago==='contado').reduce((s,t)=>s+toUYU(t.monto,t.moneda),0);
+  const credito=txs.filter(t=>t.tipo==='gasto'&&t.pago==='credito').reduce((s,t)=>s+toUYU(t.monto,t.moneda),0);
+  const disponible=ingresos-contado;
+  const spendPct=ingresos>0?Math.min(100,Math.round(contado/ingresos*100)):0;
+  const dispPct=ingresos>0?Math.round(Math.max(0,disponible)/ingresos*100):0;
+  return{ingresos,contado,credito,disponible,spendPct,dispPct};
+}
+
+function catBreakdown(){
+  const txs=currentTxs().filter(t=>t.tipo==='gasto');
+  const cats={};
+  txs.forEach(t=>{const c=t.categoria||'Otros';cats[c]=(cats[c]||0)+toUYU(t.monto,t.moneda);});
+  return Object.entries(cats).sort((a,b)=>b[1]-a[1]);
+}
+
+function showTab(name){
+  state.activeTab=name;
+  document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+name).classList.add('active');
+  render();
+}
+
+function setFilter(f){state.movFilter=f;render();}
+
+function render(){
+  const now=new Date();
+  document.getElementById('monthLabel').textContent=MESES[state.month].slice(0,3)+' '+state.year;
+  document.getElementById('topSub').textContent=now.toLocaleDateString('es-UY',{weekday:'long',day:'numeric',month:'long'});
+  if(catChart){catChart.destroy();catChart=null;}
+  const c=document.getElementById('mainContent');
+  if(state.activeTab==='dash') c.innerHTML=renderDash();
+  else if(state.activeTab==='movs') c.innerHTML=renderMovs();
+  else if(state.activeTab==='patrimonio') c.innerHTML=renderPatrimonio();
+  else if(state.activeTab==='invest') c.innerHTML=renderInvest();
+  afterRender();
+}
+
+function renderDash(){
+  const T=calcTotals();
+  const txs=currentTxs();
+  const recent=txs.slice().sort((a,b)=>new Date(b.fechaStr)-new Date(a.fechaStr)).slice(0,5);
+  const cats=catBreakdown();
+  const patrimonioTotal=state.patrimonio.pesos+state.patrimonio.dolares*USD_TO_UYU;
+  const isNow=state.month===new Date().getMonth()&&state.year===new Date().getFullYear();
+  const daysLeft=isNow?new Date(state.year,state.month+1,0).getDate()-new Date().getDate():0;
+  return`
+  <div class="hero">
+    <div class="hero-label">Disponible real · efectivo</div>
+    <div class="hero-amount">${fmt(Math.max(0,T.disponible))}</div>
+    <div class="hero-sub">${isNow?daysLeft+' días restantes · '+MESES[state.month]+' '+state.year:MESES[state.month]+' '+state.year}</div>
+    <div class="hero-row">
+      <div class="hero-stat"><div class="hero-stat-label">Ingresos</div><div class="hero-stat-val">${fmt(T.ingresos)}</div></div>
+      <div class="hero-stat"><div class="hero-stat-label">Contado</div><div class="hero-stat-val">${fmt(T.contado)}</div></div>
+      <div class="hero-stat"><div class="hero-stat-label">Patrimonio</div><div class="hero-stat-val">${fmt(patrimonioTotal)}</div></div>
+    </div>
+  </div>
+  ${T.credito>0?`<div class="credito-banner"><div><div class="credito-banner-label">💳 Crédito · pagar próximo mes</div><div class="credito-banner-amount">${fmt(T.credito)}</div><div class="credito-banner-sub">No descuenta del disponible actual</div></div><div class="credito-banner-icon">💳</div></div>`:''}
+  <div class="kpi-grid" style="padding:0 18px;margin-bottom:14px">
+    <div class="kpi"><div class="kpi-label">Gastado contado</div><div class="kpi-value" style="color:var(--red)">${fmt(T.contado)}</div><div class="kpi-sub">${T.spendPct}% del ingreso</div><div class="kpi-bar"><div class="kpi-fill" style="width:${T.spendPct}%;background:var(--red)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">Libre ahora</div><div class="kpi-value" style="color:var(--green)">${fmt(Math.max(0,T.disponible))}</div><div class="kpi-sub">${T.dispPct}% del ingreso</div><div class="kpi-bar"><div class="kpi-fill" style="width:${T.dispPct}%;background:var(--green)"></div></div></div>
+    <div class="kpi"><div class="kpi-label">Ahorro pesos</div><div class="kpi-value" style="color:var(--green)">${fmt(state.patrimonio.pesos)}</div><div class="kpi-sub">cuenta ahorro</div></div>
+    <div class="kpi"><div class="kpi-label">Ahorro USD</div><div class="kpi-value" style="color:var(--amber)">${fmt(state.patrimonio.dolares,'USD')}</div><div class="kpi-sub">cuenta ahorro</div></div>
+  </div>
+  ${cats.length>0?`<div class="section"><div class="section-label">Por categoría</div><div class="card"><div class="chart-wrap"><canvas id="catChart"></canvas></div></div></div>`:''}
+  <div class="section" style="margin-top:8px">
+    <div class="section-label">Últimos movimientos</div>
+    <div class="card" style="padding:8px 14px">
+      ${recent.length===0?`<div class="empty"><div class="empty-icon">📭</div><div>Sin movimientos este mes</div></div>`:''}
+      ${recent.map(t=>`<div class="tx-item"><div class="tx-icon">${t.icon||'📌'}</div><div class="tx-info"><div class="tx-name">${t.descripcion}</div><div class="tx-meta">${t.categoria} · ${t.quien} <span class="pago-tag ${t.pago==='credito'?'pago-credito':'pago-contado'}">${t.pago==='credito'?'crédito':'contado'}</span></div></div><div class="tx-amount" style="color:${t.tipo==='ingreso'?'var(--green)':'var(--red)'}">${t.tipo==='ingreso'?'+':'-'}${fmt(t.monto,t.moneda)}</div></div>`).join('')}
+    </div>
+  </div>
+  <div class="section" style="margin-top:8px;margin-bottom:20px">
+    <div class="section-label">Alertas</div>
+    <div class="card" style="padding:8px 14px">
+      ${T.disponible<0?`<div class="alert-item"><div class="alert-icon">🚨</div><div><div class="alert-title" style="color:var(--red)">Déficit en efectivo</div><div class="alert-desc">Gastos contado superan ingresos en ${fmt(Math.abs(T.disponible))}.</div></div></div>`:''}
+      ${T.credito>0?`<div class="alert-item"><div class="alert-icon">💳</div><div><div class="alert-title" style="color:var(--amber)">Crédito a pagar el mes que viene</div><div class="alert-desc">${fmt(T.credito)} acumulados en tarjeta.</div></div></div>`:''}
+      ${T.dispPct>=30?`<div class="alert-item"><div class="alert-icon">✅</div><div><div class="alert-title" style="color:var(--green)">Buen margen disponible</div><div class="alert-desc">Tenés ${T.dispPct}% libre. Considerá girar parte al ahorro.</div></div></div>`:''}
+      ${txs.length===0?`<div class="alert-item"><div class="alert-icon">📋</div><div><div class="alert-title">Sin movimientos</div><div class="alert-desc">Registrá desde Telegram: "super 450 contado"</div></div></div>`:''}
+    </div>
+  </div>`;
+}
+
+function renderMovs(){
+  const allTxs=currentTxs().slice().sort((a,b)=>new Date(b.fechaStr)-new Date(a.fechaStr));
+  const txs=state.movFilter==='todos'?allTxs:state.movFilter==='contado'?allTxs.filter(t=>t.pago==='contado'||t.tipo==='ingreso'):allTxs.filter(t=>t.pago==='credito'&&t.tipo==='gasto');
+  const contado=allTxs.filter(t=>t.tipo==='gasto'&&t.pago==='contado').reduce((s,t)=>s+toUYU(t.monto,t.moneda),0);
+  const credito=allTxs.filter(t=>t.tipo==='gasto'&&t.pago==='credito').reduce((s,t)=>s+toUYU(t.monto,t.moneda),0);
+  const ingresos=allTxs.filter(t=>t.tipo==='ingreso').reduce((s,t)=>s+toUYU(t.monto,t.moneda),0);
+  return`
+  <div style="display:flex;gap:8px;padding:14px 18px 8px">
+    <div class="kpi" style="flex:1"><div class="kpi-label">Ingresos</div><div class="kpi-value" style="color:var(--green);font-size:15px">${fmt(ingresos)}</div></div>
+    <div class="kpi" style="flex:1"><div class="kpi-label">Contado</div><div class="kpi-value" style="color:var(--red);font-size:15px">${fmt(contado)}</div></div>
+    <div class="kpi" style="flex:1"><div class="kpi-label">Crédito</div><div class="kpi-value" style="color:var(--amber);font-size:15px">${fmt(credito)}</div></div>
+  </div>
+  <div class="section">
+    <div class="filter-tabs">
+      <button class="ftab ${state.movFilter==='todos'?'active':''}" onclick="setFilter('todos')">Todos</button>
+      <button class="ftab ${state.movFilter==='contado'?'active':''}" onclick="setFilter('contado')">💵 Contado</button>
+      <button class="ftab ${state.movFilter==='credito'?'active':''}" onclick="setFilter('credito')">💳 Crédito</button>
+    </div>
+    <div class="card" style="padding:8px 14px">
+      ${txs.length===0?`<div class="empty"><div class="empty-icon">💬</div><div>Sin movimientos<br><strong>@Finanzashogar_uy_bot</strong></div></div>`:''}
+      ${txs.map(t=>`<div class="tx-item"><div class="tx-icon">${t.icon||'📌'}</div><div class="tx-info"><div class="tx-name">${t.descripcion}</div><div class="tx-meta">${t.categoria} · ${t.quien} ${t.tipo==='gasto'?`<span class="pago-tag ${t.pago==='credito'?'pago-credito':'pago-contado'}">${t.pago==='credito'?'crédito':'contado'}</span>`:''}</div></div><div class="tx-amount" style="color:${t.tipo==='ingreso'?'var(--green)':t.pago==='credito'?'var(--amber)':'var(--red)'}">${t.tipo==='ingreso'?'+':'-'}${fmt(t.monto,t.moneda)}</div></div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function renderPatrimonio(){
+  const totalUYU=state.patrimonio.pesos+state.patrimonio.dolares*USD_TO_UYU;
+  const pctPesos=totalUYU>0?Math.round(state.patrimonio.pesos/totalUYU*100):0;
+  const pctUSD=100-pctPesos;
+  return`
+  <div class="patrimonio-card">
+    <div class="patrimonio-label">Patrimonio líquido total</div>
+    <div class="patrimonio-total">${fmt(totalUYU)}</div>
+    <div class="patrimonio-sub">Equivalente en pesos · TC: $${USD_TO_UYU}</div>
+    <div class="patrimonio-row">
+      <div class="patrimonio-item"><div class="patrimonio-item-label">Pesos (${pctPesos}%)</div><div class="patrimonio-item-val">${fmt(state.patrimonio.pesos)}</div></div>
+      <div class="patrimonio-item"><div class="patrimonio-item-label">Dólares (${pctUSD}%)</div><div class="patrimonio-item-val">${fmt(state.patrimonio.dolares,'USD')}</div></div>
+    </div>
+  </div>
+  <div class="kpi-grid" style="padding:0 18px;margin-bottom:14px">
+    <div class="kpi"><div class="kpi-label">USD en pesos</div><div class="kpi-value" style="color:var(--amber)">${fmt(state.patrimonio.dolares*USD_TO_UYU)}</div><div class="kpi-sub">a TC $${USD_TO_UYU}</div></div>
+    <div class="kpi"><div class="kpi-label">Total en USD</div><div class="kpi-value" style="color:var(--amber)">${fmt(totalUYU/USD_TO_UYU,'USD')}</div><div class="kpi-sub">equivalente total</div></div>
+  </div>
+  <div class="section">
+    <div class="section-label">Análisis</div>
+    <div class="ai-msg"><div class="ai-msg-head"><div class="ai-dot"></div><div class="ai-msg-label">Distribución actual</div></div><div class="ai-msg-text">Tenés <strong>${pctPesos}% en pesos</strong> y <strong>${pctUSD}% en dólares</strong>. Para un perfil conservador lo ideal es 50/50 o más dólares.</div></div>
+    <div class="ai-msg"><div class="ai-msg-head"><div class="ai-dot"></div><div class="ai-msg-label">Próximo objetivo</div></div><div class="ai-msg-text">Meta sugerida: <strong>U$S 8.000–10.000</strong> como fondo de emergencia sólido en dólares.</div></div>
+    <div style="padding:12px;background:var(--surface2);border-radius:12px;margin-bottom:20px;border:1px solid var(--border)"><div style="font-size:11px;color:var(--muted);line-height:1.6">💡 Para actualizar el patrimonio editá la pestaña <strong>Patrimonio</strong> en el Google Sheet.</div></div>
+  </div>`;
+}
+
+function renderInvest(){
+  return`
+  <div class="section" style="padding-top:16px">
+    <div class="section-label">Perfil conservador · Uruguay</div>
+    <div class="ai-msg" style="margin-bottom:14px"><div class="ai-msg-head"><div class="ai-dot"></div><div class="ai-msg-label">Tu estrategia</div></div><div class="ai-msg-text">Con <strong>${fmt(state.patrimonio.pesos)}</strong> en pesos y <strong>${fmt(state.patrimonio.dolares,'USD')}</strong> en dólares, trabajá los pesos en LRM del BCU y los dólares en plazo fijo en BROU o Itaú.</div></div>
+    <div class="inv-item"><div class="inv-head"><div><div class="inv-name">Letras BCU (LRM)</div><div class="inv-type">Renta fija en pesos · 7–90 días</div></div><div><div class="inv-return">8–10%</div><div class="inv-return-label">TNA anual</div></div></div><div class="inv-desc">Máxima seguridad. Para tus pesos líquidos. Acceso vía BROU o corredores de bolsa.</div><div class="risk-bar"><div class="risk-seg" style="background:var(--green)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Riesgo muy bajo</div></div>
+    <div class="inv-item"><div class="inv-head"><div><div class="inv-name">Plazo fijo USD · BROU / Itaú</div><div class="inv-type">Renta fija en dólares · desde 30 días</div></div><div><div class="inv-return">3–5%</div><div class="inv-return-label">TNA USD</div></div></div><div class="inv-desc">Para tus dólares. Garantizado por el sistema bancario uruguayo.</div><div class="risk-bar"><div class="risk-seg" style="background:var(--green)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Riesgo muy bajo</div></div>
+    <div class="inv-item"><div class="inv-head"><div><div class="inv-name">Bonos UI · Indexados a inflación</div><div class="inv-type">Estado uruguayo · 1–3 años</div></div><div><div class="inv-return">2–3%</div><div class="inv-return-label">+ inflación</div></div></div><div class="inv-desc">Protegen el poder de compra. Ideal para ahorro a mediano plazo.</div><div class="risk-bar"><div class="risk-seg" style="background:var(--green)"></div><div class="risk-seg" style="background:var(--green)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Riesgo bajo</div></div>
+    <div class="inv-item"><div class="inv-head"><div><div class="inv-name">Itaú Asset Management</div><div class="inv-type">Ya invertido · Fondo local</div></div><div><div class="inv-return">Activo</div><div class="inv-return-label">ya invertido</div></div></div><div class="inv-desc">Revisá rendimiento en la app de Itaú. Podés agregar el saldo en la pestaña Patrimonio del Sheet.</div><div class="risk-bar"><div class="risk-seg" style="background:var(--green)"></div><div class="risk-seg" style="background:var(--green)"></div><div class="risk-seg" style="background:var(--amber)"></div><div class="risk-seg" style="background:var(--surface3)"></div><div class="risk-seg" style="background:var(--surface3)"></div></div><div style="font-size:10px;color:var(--muted);margin-top:4px">Riesgo moderado-bajo</div></div>
+    <div style="padding:12px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;margin-bottom:20px"><div style="font-size:11px;color:var(--muted);line-height:1.6">⚠️ Información orientativa. Consultá con un asesor habilitado por el BCU antes de invertir.</div></div>
+  </div>`;
+}
+
+function afterRender(){
+  const canvas=document.getElementById('catChart');
+  if(canvas){
+    const cats=catBreakdown();
+    if(cats.length>0){
+      const COLORS=['#2d6a4f','#1d5f8a','#e07b00','#c1121f','#6b4f9e','#1b7a6e','#8b5e2e','#555'];
+      catChart=new Chart(canvas,{type:'doughnut',data:{labels:cats.map(c=>c[0]),datasets:[{data:cats.map(c=>Math.round(c[1])),backgroundColor:COLORS.slice(0,cats.length),borderWidth:2,borderColor:'#fffdf9',hoverOffset:4}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{font:{size:11},color:'#7a7268',padding:10,boxWidth:10,boxHeight:10}}},cutout:'70%'}});
+    }
+  }
+}
+
+loadAll();
+</script>
+</body>
+</html>
