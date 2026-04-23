@@ -217,6 +217,8 @@ function catBreakdown(){
   return Object.entries(cats).sort((a,b)=>b[1]-a[1]);
 }
 
+  
+
 function showTab(name){
   state.activeTab=name;
   document.querySelectorAll('.bnav-btn').forEach(b=>b.classList.remove('active'));
